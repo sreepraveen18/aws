@@ -36,6 +36,7 @@ resource "aws_s3_bucket" "S3_standard_bucket" {
   restrict_public_buckets = true
   
 }
+
 resource "aws_s3_bucket_metric" "enabling-metric" {
   bucket = var.bucket-name
   name = "EntireBucket"
@@ -43,25 +44,93 @@ resource "aws_s3_bucket_metric" "enabling-metric" {
 
 resource "aws_s3_bucket_policy" "example_bucket_policy" {
   bucket = aws_s3_bucket.S3_standard_bucket.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "transfer.amazonaws.com"
+  policy = jsonencode(
+    {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowCSV",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::S3_standard_bucket/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:ExistingObjectTag/FileType": "csv"
+                }
+            }
+        },
+        {
+            "Sid": "AllowExcel",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::S3_standard_bucket/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:ExistingObjectTag/FileType": "xlsx"
+                }
+            }
+        },
+        {
+            "Sid": "AllowJSON",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::S3_standard_bucket/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:ExistingObjectTag/FileType": "json"
+                }
+            }
+        },
+         {
+      "Sid": "RestrictBatchUploads",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.S3_standard_bucket.id}/*",
+      "Condition": {
+        "NumericLessThanEquals": {
+          "s3:RequestObjectCount": "24"
         }
-        Action = [
-          "s3:ListBucket",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          "${aws_s3_bucket.S3_standard_bucket.arn}/*",
-          "${aws_s3_bucket.S3_standard_bucket.arn}"
-        ]
       }
+    }
     ]
   })
 }
+
+resource "aws_iam_policy" "s3_access_policy" {
+  name        = "s3-access-policy"
+  policy      = <<EOF
+ {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowS3Access",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::${var.s3_bucket.S3_standard_bucket}/*",
+            "Condition": {
+                "NumericLessThan": {
+                    "s3:ObjectFileSize": 50Mb
+                }
+            }
+        }
+     ]
+ }
+ EOF
+}
+
