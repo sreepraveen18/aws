@@ -28,5 +28,4 @@ resource "aws_transfer_server_endpoint" "example_sftp_endpoint" {
   subnet_id = var.subnet_id1
 }
 
-# Create an S3 bucket policy to allow the SFTP server to access the bucket
 
