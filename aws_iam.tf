@@ -44,7 +44,6 @@ resource "aws_iam_policy" "s3_access_policy" {
   })
 }
 
-# Define an IAM role that uses the S3 access policy
 
 # Attach the S3 access policy to the S3 access role
 resource "aws_iam_role_policy_attachment" "s3_access_policy_attachment" {
@@ -52,7 +51,7 @@ resource "aws_iam_role_policy_attachment" "s3_access_policy_attachment" {
   role       = aws_iam_role.s3_access_role.name
 }
 
-# Create an IAM user that can access the S3 bucket
+
 
 # Attach the S3 access policy to the IAM user
 resource "aws_iam_user_policy_attachment" "s3_access_policy_attachment" {
